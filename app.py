@@ -1,16 +1,90 @@
 from utils import FullXGBPipeline
+from PIL import Image
 import streamlit as st
 import pickle
 import pandas as pd
 import numpy as np
 
+# --- 1. CSS INJECTION FOR THE BUTTON STYLE AND ANIMATION ---
+st.markdown("""
+<style>
+/* CSS for the animated gradient button */
+.predict-button-container {
+    display: flex; /* Enables flex for centering */
+    justify-content: center; /* Centers the content (the button) */
+    margin-top: 20px;
+    margin-bottom: 20px;
+    width: 100%; /* Ensure the container spans full width to center effectively */
+}
+
+.stButton > button {
+    /* Base styles for the Streamlit button element */
+    width: 250px;
+    height: 60px;
+    font-size: 20px;
+    font-weight: bold;
+    color: white; /* Text color */
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease-in-out; /* Smooth transition for hover effects */
+
+    /* Gradient definition */
+    background: linear-gradient(135deg, #FF6B6B, #FFD166, #118AB2, #073B4C);
+    background-size: 400% 400%; /* Make the gradient large for smooth animation */
+    
+    /* Apply the movement animation */
+    animation: gradientShift 10s ease infinite; 
+}
+
+/* Hover Effect: The "Jump Out" and speed up animation */
+.stButton > button:hover {
+    transform: scale(1.08) translateY(-3px); /* Jump out (scale and slight lift) */
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4); /* Deeper shadow */
+    animation: gradientShift 4s ease infinite; /* Speed up gradient movement on hover */
+}
+
+/* Define the slow, continuous gradient movement */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Load the trained model
 with open("xgb_pipeline.pkl", "rb") as file:
     model = pickle.load(file)
 
+# ----------------------------
+# SIDEBAR CONTENT
+# ----------------------------
+with st.sidebar:
+    # Load image from project folder
+    image = Image.open("assets/sidebar_image_immo_eliza.png")
+
+    # Center the image using markdown container
+    st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+    st.image(image, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Centered & styled text
+    st.markdown(
+        """
+        <div style='text-align: center; color: #1D4ED8; font-weight: bold; font-size: 16px;'>
+            This application uses machine learning to predict Belgian real estate prices.
+            <br><br>
+            To get an instant prediction, fill in the property details.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 # Streamlit initial UI
 st.set_page_config(page_title="Property Pricing Predictor", page_icon="🏡", layout="centered")
-st.write("Fill in the required fields to get a price prediction of your property. There are 14 questions in total.")
+st.title("Belgian Real Estate Price Predictor")
+st.write("Fill in the 14 required fields to get a price prediction of your property.")
 
 # ------------------------------
 # Initialize session state
@@ -34,25 +108,28 @@ st.write(f"### Step {st.session_state.step} of {TOTAL_STEPS}")
 # -----------------------------------
 if st.session_state.step == 1:
 
-    st.session_state.type = st.selectbox("Select property type", ["House", "Apartment"], 
+    st.session_state.type = st.selectbox("Select property type", sorted(["House", "Apartment"]), 
         index=None,  # forces the user to pick something (no default)
         placeholder="Choose a property type")
 
     st.session_state.subtype = st.selectbox("Select property subtype", 
-        ["Apartment", "Residence", "Villa", "Ground floor", "Penthouse", "Duplex", "Mixed building", "Studio", "Chalet", "Bungalow", "Cottage", "Loft", "Triplex", "Mansion", "Masterhouse"],
+        sorted(["Apartment", "Residence", "Villa", "Ground floor", "Penthouse", "Duplex", "Mixed building", "Studio", "Chalet", "Bungalow", "Cottage", "Loft", "Triplex", "Mansion", "Masterhouse"]),
         index = None,
         placeholder = "Choose a property subtype")
 
     st.session_state.province = st.selectbox(
         "Select province",
-        ["Brussels", "Antwerp", "West-Flanders", "East-Flanders", "Flemish-Brabant" "Limburg", "Liège", "Brabant-Wallon", "Hainaut", "Luxembourg", "Namur"],
+        sorted([
+            "Brussels", "Antwerp", "West-Flanders", "East-Flanders", "Flemish-Brabant",
+            "Limburg", "Liège", "Brabant-Wallon", "Hainaut", "Luxembourg", "Namur"
+        ]),
         index=None,
         placeholder="Choose a province")
-
+    
 
     st.session_state.state_of_building = st.selectbox(
         "Select state of the building",
-        ["To demolish", "Under construction", "To restore", "To renovate", "To be renovated", "Normal", "Fully renovated", "Excellent", "New"],
+        sorted(["To demolish", "Under construction", "To restore", "To renovate", "To be renovated", "Normal", "Fully renovated", "Excellent", "New"]),
         index=None,
         placeholder="Choose the state of the building")
     
@@ -64,7 +141,7 @@ if st.session_state.step == 1:
 # STEP 2 of 3 — info about the inside of the property
 # ---------------------------------------------------------------
 elif st.session_state.step == 2:
-    st.session_state.living_area = st.number_input('Living area (square meter)', 
+    st.session_state.living_area = st.number_input('Living area in m²', 
                             min_value= 18, 
                             max_value= 2670, 
                             value= 100)
@@ -86,7 +163,7 @@ elif st.session_state.step == 2:
     )
 
     st.session_state.has_open_fire = st.radio(
-        "Does the property have a an open fire?",
+        "Does the property have a an open fireplace?",
         options=["Yes", "No"],
         index=None  
     )
@@ -110,8 +187,8 @@ elif st.session_state.step == 3:
         index=None  
     )
 
-    st.session_state.terrace_area = st.number_input('Terrace area (square meter)', 
-                            min_value= 1, 
+    st.session_state.terrace_area = st.number_input('Terrace area in m² (Enter zero if there is no terrace) ', 
+                            min_value= 0, 
                             max_value= 150, 
                             value= 21)
     st.session_state.has_garden = st.radio(
@@ -131,7 +208,7 @@ elif st.session_state.step == 3:
         index=None  
     )
 
-    # --- VALIDATION: ensure all fields exist ---
+    # --- VALIDATION: ensure all fields are filled in ---
     all_inputs_valid = (
         st.session_state.type is not None and
         st.session_state.subtype is not None and
@@ -149,21 +226,27 @@ elif st.session_state.step == 3:
         st.session_state.has_swimming_pool is not None
     )
     # Buttons (back + forward)
-    col1, col2 = st.columns(2)
+    col_back, _ = st.columns([1, 5])
 
-    if col1.button("← Back"):
-        st.session_state.step = 2
-        st.rerun()
-
+    with col_back:
+        # Back Button logic (remains left-aligned)
+        if st.button("← Back"):
+            st.session_state.step = 2
+            st.rerun()
+        
     # Show warning if something is missing
     if not all_inputs_valid:
-        st.warning("⚠️ Please fill in all fields to continue.")
+        st.warning("⚠️ Please fill in all fields to get a prediction.")
         st.stop()
 
 
-    # --- PREDICT ---
-    if col2.button("Predict Price"):
-
+    # --- PREDICT BUTTON IMPLEMENTATION (Centered, Below Back Button) ---
+    # We use the custom CSS class 'predict-button-container' to apply centering 
+    # across the full width of the Streamlit page.
+    st.markdown('<div class="predict-button-container">', unsafe_allow_html=True)
+    
+    # This is the actual Streamlit button that triggers your Python logic. 
+    if st.button("💰 Predict Price"):
         # Convert Yes/No to 1/0
         garden = 1 if st.session_state.has_garden == "Yes" else 0
         terrace = 1 if st.session_state.has_terrace == "Yes" else 0
@@ -203,7 +286,57 @@ elif st.session_state.step == 3:
 
         # Run model prediction and show result
         prediction = model.predict(input_df)[0]
-        st.success(f"Predicted price: €{prediction:,.0f}")
+        # Calculate 15% range
+        lower = prediction * 0.85
+        upper = prediction * 1.15
+
+            # Full width thin grey horizontal line
+        st.markdown("<hr style='border: 1px solid grey; margin-top:40px;'>", unsafe_allow_html=True)
+
+        # Predicted price section
+        st.markdown(f"""
+            <h2 style='text-align:center; color:white;'>
+                Predicted Property Price:
+            </h2>
+
+            <h1 style='text-align:center; color:#0077cc;'>
+                €{prediction:,.0f}
+            </h1>
+        """, unsafe_allow_html=True)
+
+        # Price range section
+        st.markdown(f"""
+            <h4 style='text-align:center; color:white;'>
+                Estimated Price Range in Euros (€):
+            </h4>
+
+            <p style='text-align:center; font-size:20px; color:#0077cc;'>
+                €{lower:,.0f} – €{upper:,.0f}
+            </p>
+        """, unsafe_allow_html=True)
+
+    # Overview section using an expander
+    with st.expander("Show overview of answers"):
+        
+        # Display all user inputs when the expander is opened
+        for col in input_df.columns:
+            value = input_df[col].values[0]
+
+            st.markdown(
+                f"""
+                <div style='padding:8px; margin-bottom:10px;'>
+                    <span style='font-weight:600; color:#ffffff; font-size:17px;'>
+                        {col}
+                    </span>
+                    <br>
+                    <span style='color:#0077cc; font-size:19px;'>
+                        {value}
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
     
 # To launch the streamlit app locally: run "streamlit run app.py" in terminal
 

@@ -112,3 +112,4 @@ class FullXGBPipeline(BaseEstimator, TransformerMixin):
             "R2": r2_score(y_true, y_pred)
         }
         return metrics
+
