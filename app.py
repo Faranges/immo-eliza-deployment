@@ -295,7 +295,7 @@ elif st.session_state.step == 3:
 
         # Predicted price section
         st.markdown(f"""
-            <h2 style='text-align:center; color:white;'>
+            <h2 style='text-align:center; color:#0077cc;'>
                 Predicted Property Price:
             </h2>
 
@@ -306,7 +306,7 @@ elif st.session_state.step == 3:
 
         # Price range section
         st.markdown(f"""
-            <h4 style='text-align:center; color:white;'>
+            <h4 style='text-align:center; color:#0077cc;'>
                 Estimated Price Range in Euros (€):
             </h4>
 
@@ -315,27 +315,27 @@ elif st.session_state.step == 3:
             </p>
         """, unsafe_allow_html=True)
 
-    # Overview section using an expander
-    with st.expander("Show overview of answers"):
-        
-        # Display all user inputs when the expander is opened
-        for col in input_df.columns:
-            value = input_df[col].values[0]
+        # Overview section using an expander
+        with st.expander("Show overview of answers"):
+            
+            # Display all user inputs when the expander is opened
+            for col in input_df.columns:
+                value = input_df[col].values[0]
 
-            st.markdown(
-                f"""
-                <div style='padding:8px; margin-bottom:10px;'>
-                    <span style='font-weight:600; color:#ffffff; font-size:17px;'>
-                        {col}
-                    </span>
-                    <br>
-                    <span style='color:#0077cc; font-size:19px;'>
-                        {value}
-                    </span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+                st.markdown(
+                    f"""
+                    <div style='padding:8px; margin-bottom:10px;'>
+                        <span style='font-weight:600; color:#0077cc; font-size:17px;'>
+                            {col}
+                        </span>
+                        <br>
+                        <span style='color:#0077cc; font-size:19px;'>
+                            {value}
+                        </span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
     
 # To launch the streamlit app locally: run "streamlit run app.py" in terminal

@@ -35,6 +35,6 @@ typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
 # --- Added for ML model support ---
-scikit-learn==1.5.2
+scikit-learn==1.7.2
 joblib==1.4.2
-xgboost==2.1.1
+xgboost==3.1.2
