@@ -54,8 +54,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+#-----------------------
 # Load the trained model
-with open("xgb_pipeline.pkl", "rb") as file:
+#-----------------------
+with open("../models/xgb_pipeline.pkl", "rb") as file:
     model = pickle.load(file)
 
 # ----------------------------
@@ -81,7 +83,9 @@ with st.sidebar:
         """,
         unsafe_allow_html=True
     )
-# Streamlit initial UI
+# --------------------
+# Title and subtitle
+# --------------------
 st.set_page_config(page_title="Property Pricing Predictor", page_icon="🏡", layout="centered")
 st.title("Belgian Real Estate Price Predictor")
 st.write("Fill in the 14 required fields to get a price prediction of your property.")
@@ -101,11 +105,10 @@ st.progress(progress)
 
 st.write(f"### Step {st.session_state.step} of {TOTAL_STEPS}")
 
-# Required Input for user (dropdown or yes/no binary features or number input)
 
-# -----------------------------------
-# STEP 1 of 3 — General property info
-# -----------------------------------
+# -----------------------------------------------
+# User input: STEP 1 of 3 — General property info
+# -----------------------------------------------
 if st.session_state.step == 1:
 
     st.session_state.type = st.selectbox("Select property type", sorted(["House", "Apartment"]), 
@@ -138,7 +141,7 @@ if st.session_state.step == 1:
         st.rerun()
 
 # ---------------------------------------------------------------
-# STEP 2 of 3 — info about the inside of the property
+# User input: STEP 2 of 3 — info about the inside of the property
 # ---------------------------------------------------------------
 elif st.session_state.step == 2:
     st.session_state.living_area = st.number_input('Living area in m²', 
@@ -163,7 +166,7 @@ elif st.session_state.step == 2:
     )
 
     st.session_state.has_open_fire = st.radio(
-        "Does the property have a an open fireplace?",
+        "Does the property have an open fireplace?",
         options=["Yes", "No"],
         index=None  
     )
@@ -241,11 +244,9 @@ elif st.session_state.step == 3:
 
 
     # --- PREDICT BUTTON IMPLEMENTATION (Centered, Below Back Button) ---
-    # We use the custom CSS class 'predict-button-container' to apply centering 
-    # across the full width of the Streamlit page.
     st.markdown('<div class="predict-button-container">', unsafe_allow_html=True)
     
-    # This is the actual Streamlit button that triggers your Python logic. 
+    # The actual Streamlit button that triggers Python logic. 
     if st.button("💰 Predict Price"):
         # Convert Yes/No to 1/0
         garden = 1 if st.session_state.has_garden == "Yes" else 0
@@ -274,7 +275,6 @@ elif st.session_state.step == 3:
         }])
 
         # Reorder input_df to match the numeric + categorical column order pipeline expects
-        # The pipeline will create the _le and _oe columns internally
         numeric_and_cat_cols = [
             'number_of_bedrooms', 'living_area (m²)', 'equiped_kitchen (yes:1, no:0)',
             'furnished (yes:1, no:0)', 'open_fire (yes:1, no:0)', 'terrace (yes:1, no:0)',
@@ -283,14 +283,13 @@ elif st.session_state.step == 3:
         ]
         input_df = input_df[numeric_and_cat_cols]
 
-
-        # Run model prediction and show result
+        # Run model prediction 
         prediction = model.predict(input_df)[0]
-        # Calculate 15% range
+        # Calculate estimaded 15% range
         lower = prediction * 0.85
         upper = prediction * 1.15
 
-            # Full width thin grey horizontal line
+        # Full width thin grey horizontal line
         st.markdown("<hr style='border: 1px solid grey; margin-top:40px;'>", unsafe_allow_html=True)
 
         # Predicted price section
