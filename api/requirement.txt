@@ -1,7 +1,12 @@
 fastapi
 uvicorn[standard]
+gunicorn
+
 pandas
+pydantic
+
 scikit-learn
 xgboost
-pydantic
 python-dotenv
+
+

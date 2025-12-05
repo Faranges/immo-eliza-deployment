@@ -5,17 +5,13 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import pandas as pd
 import pickle
-
-# ---------------------------
-# LOAD MODEL
-# ---------------------------
-with open("../models/xgb_pipeline.pkl", "rb") as f:
-    model = pickle.load(f)
+from .predict import make_prediction   # ← import from predict.py
 
 app = FastAPI(
-    title="Immo Price Prediction API"
+    title="Immo Price Prediction API",
     description="API for predicting real estate prices"
 )
+
 
 # ----------------------------------------
 # ALLOWED OPTIONS 
@@ -67,7 +63,7 @@ class PropertyInput(BaseModel):
 
 
 # ----------------------------------------
-# ROOT ENDPOINT
+# HEALTH CHECK ENDPOINT
 # ----------------------------------------
 @app.get("/")
 def alive():
@@ -112,7 +108,7 @@ def predict_price(data: PropertyInput):
 
     input_df = input_df[model_order]
 
-    # Make prediction
+    # Try model prediction
     try:
         prediction = model.predict(input_df)[0]
     except Exception as e:
